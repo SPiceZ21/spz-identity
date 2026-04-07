@@ -2,7 +2,7 @@
 
 Config = {}
 
--- License promotion requirements
+-- License promotion requirements (override defaults if needed)
 Config.LicenseRequirements = {
     [1] = { points = 500,  top3 = 5,  min_sr = 1.0 },  -- C → B
     [2] = { points = 1000, top3 = 8,  min_sr = 1.5 },  -- B → A
