@@ -60,3 +60,37 @@ local function UnlockLicense(source, tier, method)
 end
 
 exports("UnlockLicense", UnlockLicense)
+
+---@param source number
+---@return table
+local function GetLicenseHistory(source)
+    local profile = exports["spz-identity"]:GetProfile(source)
+    if not profile then
+        return {}
+    end
+
+    local rows = MySQL.query.await([[
+        SELECT tier, unlocked_at, method
+        FROM driver_licenses
+        WHERE player_id = ?
+        ORDER BY unlocked_at ASC
+    ]], { profile.id })
+
+    if not rows then
+        return {}
+    end
+
+    local history = {}
+    for _, row in ipairs(rows) do
+        table.insert(history, {
+            tier = row.tier,
+            tier_name = SPZ.LicenseNames[row.tier] or "Unknown",
+            unlocked_at = row.unlocked_at,
+            method = row.method
+        })
+    end
+
+    return history
+end
+
+exports("GetLicenseHistory", GetLicenseHistory)
