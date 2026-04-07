@@ -107,7 +107,7 @@ local function GetProfile(source)
         license_tier = row.license_tier,
         top3_count = row.top3_count,
         crew_id = row.crew_id,
-        crew_tag = row.crew_tag,
+        crew_tag = row.crew_tag and ("[%s]"):format(row.crew_tag) or nil,
         credits = row.credits,
         banned = row.banned == 1
     }
@@ -179,6 +179,18 @@ local function UpdateProfile(source, changes)
         if WhitelistedProfileKeys[key] then
             profile[key] = value
             changedSubset[key] = value
+
+            -- Special case: update crew_tag when crew_id changes
+            if key == "crew_id" then
+                if value == nil then
+                    profile.crew_tag = nil
+                    changedSubset.crew_tag = nil
+                else
+                    local tag = MySQL.scalar.await("SELECT tag FROM crews WHERE id = ? LIMIT 1", { value })
+                    profile.crew_tag = tag and ("[%s]"):format(tag) or nil
+                    changedSubset.crew_tag = profile.crew_tag
+                end
+            end
         end
     end
 
