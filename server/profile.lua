@@ -68,4 +68,53 @@ local function CreateProfile(source, identifier, name)
     return profile
 end
 
+---@param source number
+---@return table|nil
+local function GetProfile(source)
+    if ProfileCache[source] then
+        return ProfileCache[source]
+    end
+
+    -- Fallback to DB read (edge case)
+    local identifier = GetPlayerIdentifierByType(source, 'license')
+    if not identifier then
+        return nil
+    end
+
+    local row = MySQL.single.await([[
+        SELECT p.*, c.tag as crew_tag
+        FROM players p
+        LEFT JOIN crews c ON p.crew_id = c.id
+        WHERE p.identifier = ?
+        LIMIT 1
+    ]], { identifier })
+
+    if not row then
+        return nil
+    end
+
+    local profile = {
+        id = row.id,
+        identifier = row.identifier,
+        name = row.name,
+        playtime = row.playtime,
+        xp = row.xp,
+        class_points = row.class_points,
+        alltime_points = row.alltime_points,
+        sr = row.sr,
+        i_rating = row.i_rating,
+        rank = row.rank,
+        license_tier = row.license_tier,
+        top3_count = row.top3_count,
+        crew_id = row.crew_id,
+        crew_tag = row.crew_tag,
+        credits = row.credits,
+        banned = row.banned == 1
+    }
+
+    ProfileCache[source] = profile
+    return profile
+end
+
 exports("CreateProfile", CreateProfile)
+exports("GetProfile", GetProfile)
