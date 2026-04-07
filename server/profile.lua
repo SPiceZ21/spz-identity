@@ -151,6 +151,47 @@ local function GetProfileByIdentifier(identifier)
     }
 end
 
+local WhitelistedProfileKeys = {
+    ['name'] = true,
+    ['rank'] = true,
+    ['license_tier'] = true,
+    ['top3_count'] = true,
+    ['xp'] = true,
+    ['class_points'] = true,
+    ['alltime_points'] = true,
+    ['sr'] = true,
+    ['i_rating'] = true,
+    ['credits'] = true,
+    ['crew_id'] = true
+}
+
+---@param source number
+---@param changes table
+---@return boolean
+local function UpdateProfile(source, changes)
+    local profile = GetProfile(source)
+    if not profile then
+        return false
+    end
+
+    local changedSubset = {}
+    for key, value in pairs(changes) do
+        if WhitelistedProfileKeys[key] then
+            profile[key] = value
+            changedSubset[key] = value
+        end
+    end
+
+    if next(changedSubset) then
+        profile._dirty = true
+        TriggerClientEvent('SPZ:syncProfile', source, changedSubset)
+        return true
+    end
+
+    return false
+end
+
 exports("CreateProfile", CreateProfile)
 exports("GetProfile", GetProfile)
 exports("GetProfileByIdentifier", GetProfileByIdentifier)
+exports("UpdateProfile", UpdateProfile)
