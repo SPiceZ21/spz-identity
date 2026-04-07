@@ -266,9 +266,66 @@ local function BanPlayer(source, reason)
     return false
 end
 
+---@param source number
+---@return number
+local function GetPlaytime(source)
+    local profile = GetProfile(source)
+    if not profile then
+        return 0
+    end
+
+    local sessionPlaytime = 0
+    if profile.joinedAt then
+        sessionPlaytime = os.time() - profile.joinedAt
+    end
+
+    return profile.playtime + sessionPlaytime
+end
+
+-- --- Background Tasks ---
+
+-- Periodic Batch Save
+CreateThread(function()
+    while true do
+        Wait((Config.SaveInterval or 60) * 1000)
+        
+        for source, profile in pairs(ProfileCache) do
+            if profile._dirty then
+                SaveProfile(source)
+            end
+        end
+    end
+end)
+
+-- --- Event Handlers ---
+
+-- playerDisconnected handler (fired by spz-core)
+AddEventHandler("SPZ:playerDisconnected", function(source)
+    local profile = ProfileCache[source]
+    if not profile then
+        return
+    end
+
+    -- 1. Finalize playtime
+    if profile.joinedAt then
+        local sessionDuration = os.time() - profile.joinedAt
+        profile.playtime = profile.playtime + sessionDuration
+        profile._dirty = true
+    end
+
+    -- 2. Flush to DB
+    SaveProfile(source)
+
+    -- 3. Clear cache
+    ProfileCache[source] = nil
+end)
+
+-- --- Exports ---
+
 exports("CreateProfile", CreateProfile)
 exports("GetProfile", GetProfile)
 exports("GetProfileByIdentifier", GetProfileByIdentifier)
 exports("UpdateProfile", UpdateProfile)
 exports("SaveProfile", SaveProfile)
 exports("BanPlayer", BanPlayer)
+exports("GetPlaytime", GetPlaytime)
