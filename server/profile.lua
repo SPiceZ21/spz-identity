@@ -191,7 +191,57 @@ local function UpdateProfile(source, changes)
     return false
 end
 
+---@param source number
+---@return boolean
+local function SaveProfile(source)
+    local profile = ProfileCache[source]
+    if not profile or not profile._dirty then
+        return false
+    end
+
+    local success = MySQL.update.await([[
+        UPDATE players SET
+            name = ?,
+            playtime = ?,
+            xp = ?,
+            class_points = ?,
+            alltime_points = ?,
+            sr = ?,
+            i_rating = ?,
+            rank = ?,
+            license_tier = ?,
+            top3_count = ?,
+            crew_id = ?,
+            credits = ?,
+            banned = ?
+        WHERE id = ?
+    ]], {
+        profile.name,
+        profile.playtime,
+        profile.xp,
+        profile.class_points,
+        profile.alltime_points,
+        profile.sr,
+        profile.i_rating,
+        profile.rank,
+        profile.license_tier,
+        profile.top3_count,
+        profile.crew_id,
+        profile.credits,
+        profile.banned and 1 or 0,
+        profile.id
+    })
+
+    if success then
+        profile._dirty = false
+        return true
+    end
+
+    return false
+end
+
 exports("CreateProfile", CreateProfile)
 exports("GetProfile", GetProfile)
 exports("GetProfileByIdentifier", GetProfileByIdentifier)
 exports("UpdateProfile", UpdateProfile)
+exports("SaveProfile", SaveProfile)
