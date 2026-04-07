@@ -240,8 +240,35 @@ local function SaveProfile(source)
     return false
 end
 
+---@param source number
+---@param reason string
+---@return boolean
+local function BanPlayer(source, reason)
+    local profile = GetProfile(source)
+    if not profile then
+        return false
+    end
+
+    profile.banned = true
+    profile.ban_reason = reason
+    profile._dirty = true
+
+    -- Immediate DB update for bans
+    local success = MySQL.update.await([[
+        UPDATE players SET banned = 1, ban_reason = ? WHERE id = ?
+    ]], { reason, profile.id })
+
+    if success then
+        DropPlayer(source, ("You have been banned: %s"):format(reason))
+        return true
+    end
+
+    return false
+end
+
 exports("CreateProfile", CreateProfile)
 exports("GetProfile", GetProfile)
 exports("GetProfileByIdentifier", GetProfileByIdentifier)
 exports("UpdateProfile", UpdateProfile)
 exports("SaveProfile", SaveProfile)
+exports("BanPlayer", BanPlayer)
