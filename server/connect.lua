@@ -46,6 +46,10 @@ local function OnPlayerConnected(source, deferrals)
     -- We can call GetProfile(source) to trigger the cache fill if it's not there
     exports["spz-identity"]:GetProfile(source) 
 
+    -- Send initial sync
+    local syncData = exports["spz-identity"]:GetSyncSubset(profile)
+    TriggerClientEvent("SPZ:syncProfile", source, syncData)
+
     -- 5. Finalize connection
     deferrals.done()
 

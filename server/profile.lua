@@ -191,6 +191,15 @@ local function UpdateProfile(source, changes)
                     changedSubset.crew_tag = profile.crew_tag
                 end
             end
+
+            -- Special case: Derived names for client sync
+            if key == "rank" then
+                changedSubset.rank_name = exports["spz-identity"]:GetRankName(value)
+            end
+
+            if key == "license_tier" then
+                changedSubset.license_name = SPZ.LicenseNames[value] or "Unknown"
+            end
         end
     end
 
@@ -334,6 +343,24 @@ end)
 
 -- --- Exports ---
 
+---@param profile table
+---@return table
+local function GetSyncSubset(profile)
+    return {
+        name           = profile.name,
+        rank           = profile.rank,
+        rank_name      = exports["spz-identity"]:GetRankName(profile.rank),
+        license_tier   = profile.license_tier,
+        license_name   = SPZ.LicenseNames[profile.license_tier] or "Unknown",
+        crew_tag       = profile.crew_tag,
+        xp             = profile.xp,
+        class_points   = profile.class_points,
+        alltime_points = profile.alltime_points,
+        sr             = profile.sr,
+        i_rating       = profile.i_rating,
+    }
+end
+
 exports("CreateProfile", CreateProfile)
 exports("GetProfile", GetProfile)
 exports("GetProfileByIdentifier", GetProfileByIdentifier)
@@ -341,3 +368,4 @@ exports("UpdateProfile", UpdateProfile)
 exports("SaveProfile", SaveProfile)
 exports("BanPlayer", BanPlayer)
 exports("GetPlaytime", GetPlaytime)
+exports("GetSyncSubset", GetSyncSubset)
