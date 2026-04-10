@@ -7,6 +7,14 @@ version '1.0.0'
 author 'SPiceZ-Core'
 
 shared_scripts {
+  '@spz-lib/shared/main.lua',
+  '@spz-lib/shared/callbacks.lua',
+  '@spz-lib/shared/notify.lua',
+  '@spz-lib/shared/timer.lua',
+  '@spz-lib/shared/logger.lua',
+  '@spz-lib/shared/math.lua',
+  '@spz-lib/shared/table.lua',
+  '@spz-lib/shared/string.lua',
   'shared/licenses.lua',
   'shared/ranks.lua',
   'shared/events.lua',
@@ -14,6 +22,7 @@ shared_scripts {
 
 server_scripts {
   '@oxmysql/lib/MySQL.lua',
+  'config.lua',
   'server/main.lua',
   'server/connect.lua',
   'server/profile.lua',
