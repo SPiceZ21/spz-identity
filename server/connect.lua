@@ -1,16 +1,13 @@
 -- server/connect.lua
 
 local function OnPlayerConnected(source, deferrals)
-    if not deferrals then
-        print(("^1[spz-identity] Error: Deferrals object missing in SPZ:playerConnected for %s^7"):format(source))
-        return
+    if deferrals then
+        deferrals.update("Loading your driver profile...")
     end
-
-    deferrals.update("Loading your driver profile...")
 
     local identifier = GetPlayerIdentifierByType(source, 'license')
     if not identifier then
-        deferrals.done("Connection failed: Could not find license identifier.")
+        if deferrals then deferrals.done("Connection failed: Could not find license identifier.") end
         return
     end
 
@@ -19,7 +16,7 @@ local function OnPlayerConnected(source, deferrals)
     
     -- 2. If no profile, create it
     if not profile then
-        deferrals.update("Creating new driver profile...")
+        if deferrals then deferrals.update("Creating new driver profile...") end
         profile = exports["spz-identity"]:CreateProfile(source, identifier, GetPlayerName(source))
     end
 
@@ -30,7 +27,7 @@ local function OnPlayerConnected(source, deferrals)
 
     -- 3. Check for ban
     if profile.banned then
-        deferrals.done("You are banned from this server. Reason: " .. (profile.ban_reason or "No reason provided."))
+        if deferrals then deferrals.done("You are banned from this server. Reason: " .. (profile.ban_reason or "No reason provided.")) end
         return
     end
 
@@ -51,7 +48,7 @@ local function OnPlayerConnected(source, deferrals)
     TriggerClientEvent("SPZ:syncProfile", source, syncData)
 
     -- 5. Finalize connection
-    deferrals.done()
+    if deferrals then deferrals.done() end
 
     -- 6. Signal that the player is ready (wait a tick to ensure cache is solid)
     SetTimeout(100, function()
