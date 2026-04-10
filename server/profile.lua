@@ -61,7 +61,8 @@ local function CreateProfile(source, identifier, name)
         crew_id = nil,
         crew_tag = nil,
         credits = 0,
-        banned = false
+        banned = false,
+        state = 'IDLE'
     }
 
     ProfileCache[source] = profile
@@ -109,7 +110,8 @@ local function GetProfile(source)
         crew_id = row.crew_id,
         crew_tag = row.crew_tag and ("[%s]"):format(row.crew_tag) or nil,
         credits = row.credits,
-        banned = row.banned == 1
+        banned = row.banned == 1,
+        state = 'IDLE'
     }
 
     ProfileCache[source] = profile
@@ -361,6 +363,22 @@ local function GetSyncSubset(profile)
     }
 end
 
+---@param source number
+---@return string
+local function GetPlayerState(source)
+    local profile = ProfileCache[source]
+    return profile and profile.state or "IDLE"
+end
+
+---@param source number
+---@param state string
+local function SetPlayerState(source, state)
+    local profile = ProfileCache[source]
+    if profile then
+        profile.state = state
+    end
+end
+
 exports("CreateProfile", CreateProfile)
 exports("GetProfile", GetProfile)
 exports("GetProfileByIdentifier", GetProfileByIdentifier)
@@ -369,3 +387,5 @@ exports("SaveProfile", SaveProfile)
 exports("BanPlayer", BanPlayer)
 exports("GetPlaytime", GetPlaytime)
 exports("GetSyncSubset", GetSyncSubset)
+exports("GetPlayerState", GetPlayerState)
+exports("SetPlayerState", SetPlayerState)

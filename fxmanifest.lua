@@ -42,3 +42,13 @@ dependencies {
   'spz-core',
   'oxmysql',
 }
+
+exports {
+  'GetProfile',
+  'UpdateProfile',
+  'GetPlayerState',
+  'SetPlayerState',
+  'HasLicense',
+  'GetLicenseTier',
+  'UnlockLicense',
+}
