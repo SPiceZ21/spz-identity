@@ -37,8 +37,7 @@ local function OnPlayerConnected(source, deferrals)
         exports["spz-identity"]:GetProfile(source)
         SetTimeout(100, function()
             local suggested = exports["spz-identity"]:GetPlatformName(source)
-            TriggerClientEvent("SPZ:firstTimePlayer", source, suggested)
-            TriggerEvent("SPZ:firstTimePlayer", source, suggested)
+            TriggerClientEvent("SPZ:openCharacterCreation", source, { suggested = suggested })
         end)
         return
     end

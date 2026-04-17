@@ -7,7 +7,7 @@
         identifier     = string,    -- "license:xxxx"
         citizen_id     = string,    -- "SPZ-XXXXX"
         username       = string,
-        gender         = string,    -- 'm' or 'f'
+        gender         = number,    -- 0=male 1=female
         first_time     = number,    -- 1 or 0
         playtime       = number,    -- seconds
         xp             = number,
@@ -400,6 +400,13 @@ local function SetPlayerState(source, state)
     end
 end
 
+---@param source number
+---@return boolean
+local function IsFirstTime(source)
+    local profile = ProfileCache[source]
+    return profile and profile.first_time == 1 or false
+end
+
 exports("CreateProfile", CreateProfile)
 exports("GetProfile", GetProfile)
 exports("GetProfileByIdentifier", GetProfileByIdentifier)
@@ -410,3 +417,4 @@ exports("GetPlaytime", GetPlaytime)
 exports("GetSyncSubset", GetSyncSubset)
 exports("GetPlayerState", GetPlayerState)
 exports("SetPlayerState", SetPlayerState)
+exports("IsFirstTime", IsFirstTime)

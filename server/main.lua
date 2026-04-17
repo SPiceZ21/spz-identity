@@ -54,6 +54,8 @@ RegisterNetEvent("SPZ:characterCreated", function(gender, username)
 
     -- 7. Advise spz-core to deploy the player to Freeroam properly
     SetTimeout(100, function()
+        -- Wait for SPZ:characterReady to fire after character creation completes
+        TriggerEvent("SPZ:characterReady", source)
         TriggerEvent("SPZ:playerReady", source, profile)
     end)
 end)
