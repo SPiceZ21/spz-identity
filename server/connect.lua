@@ -55,9 +55,19 @@ local function OnPlayerConnected(source, deferrals)
     -- 6. Finalize connection
     if deferrals then deferrals.done() end
 
-    -- 7. Signal that the player is ready
+    -- 7. Signal that the player is ready (server-side modules)
     SetTimeout(100, function()
         TriggerEvent("SPZ:playerReady", source, profile)
+    end)
+
+    -- 8. Tell the client they are fully loaded so UI can open
+    SetTimeout(300, function()
+        TriggerClientEvent("SPZ:identityReady", source, {
+            citizenId   = profile.citizen_id,
+            username    = profile.username,
+            rank        = profile.rank,
+            licenseTier = profile.license_tier or 0,
+        })
     end)
 end
 
