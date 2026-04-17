@@ -25,6 +25,8 @@ server_scripts {
   'config.lua',
   'server/main.lua',
   'server/connect.lua',
+  'server/citizen_id.lua',
+  'server/username.lua',
   'server/profile.lua',
   'server/licenses.lua',
   'server/ranks.lua',
@@ -51,4 +53,7 @@ exports {
   'HasLicense',
   'GetLicenseTier',
   'UnlockLicense',
+  'GetCitizenId',
+  'GetByCitizenId',
+  'GetUsername',
 }

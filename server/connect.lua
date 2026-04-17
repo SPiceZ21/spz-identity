@@ -17,7 +17,7 @@ local function OnPlayerConnected(source, deferrals)
     -- 2. If no profile, create it
     if not profile then
         if deferrals then deferrals.update("Creating new driver profile...") end
-        profile = exports["spz-identity"]:CreateProfile(source, identifier, GetPlayerName(source))
+        profile = exports["spz-identity"]:CreateProfile(source, identifier)
     end
 
     if not profile then
@@ -31,26 +31,32 @@ local function OnPlayerConnected(source, deferrals)
         return
     end
 
-    -- 4. Warm session cache & Start playtime tracker
-    -- Note: CreateProfile already added it to cache if it was a new player.
-    -- If it's an existing player, we need to ensure it's in ProfileCache for this source.
-    -- Let's add a LoadProfile into cache mechanism or just use GetProfile(source)
-    -- which forces a DB read + cache if missing.
-    
+    -- 4. Check for first time setup
+    if profile.first_time == 1 then
+        if deferrals then deferrals.done() end
+        exports["spz-identity"]:GetProfile(source)
+        SetTimeout(100, function()
+            -- Both client and server events for flexibility
+            TriggerClientEvent("SPZ:firstTimePlayer", source)
+            TriggerEvent("SPZ:firstTimePlayer", source)
+        end)
+        return
+    end
+
+    -- 5. Warm session cache & Start playtime tracker
     profile.joinedAt = os.time()
     
     -- Ensure it's in the cache for the current source ID
-    -- We can call GetProfile(source) to trigger the cache fill if it's not there
     exports["spz-identity"]:GetProfile(source) 
 
     -- Send initial sync
     local syncData = exports["spz-identity"]:GetSyncSubset(profile)
     TriggerClientEvent("SPZ:syncProfile", source, syncData)
 
-    -- 5. Finalize connection
+    -- 6. Finalize connection
     if deferrals then deferrals.done() end
 
-    -- 6. Signal that the player is ready (wait a tick to ensure cache is solid)
+    -- 7. Signal that the player is ready
     SetTimeout(100, function()
         TriggerEvent("SPZ:playerReady", source, profile)
     end)
