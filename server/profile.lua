@@ -362,6 +362,10 @@ AddEventHandler("SPZ:playerDisconnected", function(source)
     ProfileCache[source] = nil
 end)
 
+RegisterNetEvent("SPZ:identity:setPlayerState", function(state)
+    SetPlayerState(source, state)
+end)
+
 -- --- Exports ---
 
 ---@param profile table
