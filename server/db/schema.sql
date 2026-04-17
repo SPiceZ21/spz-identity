@@ -4,8 +4,8 @@ CREATE TABLE IF NOT EXISTS players (
   id               INT           AUTO_INCREMENT PRIMARY KEY,
   identifier       VARCHAR(64)   NOT NULL UNIQUE,   -- "license:xxxx"
   citizen_id       VARCHAR(10)   UNIQUE,            -- "SPZ-XXXXX"
-  username         VARCHAR(64)   NULL UNIQUE,       -- globally unique name
-  gender           VARCHAR(1)    NULL,              -- 'm' or 'f'
+  username         VARCHAR(20)   NULL UNIQUE,       -- globally unique name
+  gender           TINYINT       DEFAULT 0,         -- 0=male 1=female
   first_time       TINYINT       DEFAULT 1,         -- 1 = needs character creation
   playtime         INT           DEFAULT 0,          -- total seconds on server
   xp               INT           DEFAULT 0,          -- raw XP (used by spz-progression)

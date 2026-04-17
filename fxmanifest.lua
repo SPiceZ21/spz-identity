@@ -56,4 +56,5 @@ exports {
   'GetCitizenId',
   'GetByCitizenId',
   'GetUsername',
+  'IsFirstTime',
 }
