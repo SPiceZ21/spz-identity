@@ -36,9 +36,9 @@ local function OnPlayerConnected(source, deferrals)
         if deferrals then deferrals.done() end
         exports["spz-identity"]:GetProfile(source)
         SetTimeout(100, function()
-            -- Both client and server events for flexibility
-            TriggerClientEvent("SPZ:firstTimePlayer", source)
-            TriggerEvent("SPZ:firstTimePlayer", source)
+            local suggested = exports["spz-identity"]:GetPlatformName(source)
+            TriggerClientEvent("SPZ:firstTimePlayer", source, suggested)
+            TriggerEvent("SPZ:firstTimePlayer", source, suggested)
         end)
         return
     end
