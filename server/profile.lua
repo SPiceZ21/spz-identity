@@ -5,7 +5,10 @@
     {
         id             = number,
         identifier     = string,    -- "license:xxxx"
-        name           = string,
+        citizen_id     = string,    -- "SPZ-XXXXX"
+        username       = string,
+        gender         = string,    -- 'm' or 'f'
+        first_time     = number,    -- 1 or 0
         playtime       = number,    -- seconds
         xp             = number,
         class_points   = number,    -- points in current class (season-resettable)
@@ -26,15 +29,16 @@ local ProfileCache = {}
 
 ---@param source number
 ---@param identifier string
----@param name string
 ---@return table|nil
-local function CreateProfile(source, identifier, name)
+local function CreateProfile(source, identifier)
+    local citizen_id = SPZ.GenerateCitizenId()
+
     local insertId = MySQL.insert.await([[
-        INSERT INTO players (identifier, name, sr, i_rating, rank, license_tier)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO players (identifier, citizen_id, first_time, sr, i_rating, rank, license_tier)
+        VALUES (?, ?, 1, ?, ?, ?, ?)
     ]], {
         identifier,
-        name,
+        citizen_id,
         Config.DefaultSR or 2.0,
         Config.DefaultIRating or 1500,
         'C-5',
@@ -48,7 +52,10 @@ local function CreateProfile(source, identifier, name)
     local profile = {
         id = insertId,
         identifier = identifier,
-        name = name,
+        citizen_id = citizen_id,
+        username = nil,
+        gender = nil,
+        first_time = 1,
         playtime = 0,
         xp = 0,
         class_points = 0,
@@ -97,7 +104,10 @@ local function GetProfile(source)
     local profile = {
         id = row.id,
         identifier = row.identifier,
-        name = row.name,
+        citizen_id = row.citizen_id,
+        username = row.username,
+        gender = row.gender,
+        first_time = row.first_time,
         playtime = row.playtime,
         xp = row.xp,
         class_points = row.class_points,
@@ -136,7 +146,10 @@ local function GetProfileByIdentifier(identifier)
     return {
         id = row.id,
         identifier = row.identifier,
-        name = row.name,
+        citizen_id = row.citizen_id,
+        username = row.username,
+        gender = row.gender,
+        first_time = row.first_time,
         playtime = row.playtime,
         xp = row.xp,
         class_points = row.class_points,
@@ -154,7 +167,9 @@ local function GetProfileByIdentifier(identifier)
 end
 
 local WhitelistedProfileKeys = {
-    ['name'] = true,
+    ['username'] = true,
+    ['gender'] = true,
+    ['first_time'] = true,
     ['rank'] = true,
     ['license_tier'] = true,
     ['top3_count'] = true,
@@ -224,7 +239,9 @@ local function SaveProfile(source)
 
     local success = MySQL.update.await([[
         UPDATE players SET
-            name = ?,
+            username = ?,
+            gender = ?,
+            first_time = ?,
             playtime = ?,
             xp = ?,
             class_points = ?,
@@ -239,7 +256,9 @@ local function SaveProfile(source)
             banned = ?
         WHERE id = ?
     ]], {
-        profile.name,
+        profile.username,
+        profile.gender,
+        profile.first_time,
         profile.playtime,
         profile.xp,
         profile.class_points,
@@ -349,7 +368,9 @@ end)
 ---@return table
 local function GetSyncSubset(profile)
     return {
-        name           = profile.name,
+        citizen_id     = profile.citizen_id,
+        username       = profile.username,
+        gender         = profile.gender,
         rank           = profile.rank,
         rank_name      = exports["spz-identity"]:GetRankName(profile.rank),
         license_tier   = profile.license_tier,

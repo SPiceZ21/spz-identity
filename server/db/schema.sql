@@ -3,7 +3,10 @@
 CREATE TABLE IF NOT EXISTS players (
   id               INT           AUTO_INCREMENT PRIMARY KEY,
   identifier       VARCHAR(64)   NOT NULL UNIQUE,   -- "license:xxxx"
-  name             VARCHAR(64)   NOT NULL,
+  citizen_id       VARCHAR(10)   UNIQUE,            -- "SPZ-XXXXX"
+  username         VARCHAR(64)   NULL UNIQUE,       -- globally unique name
+  gender           VARCHAR(1)    NULL,              -- 'm' or 'f'
+  first_time       TINYINT       DEFAULT 1,         -- 1 = needs character creation
   playtime         INT           DEFAULT 0,          -- total seconds on server
   xp               INT           DEFAULT 0,          -- raw XP (used by spz-progression)
   class_points     INT           DEFAULT 0,          -- points in current license class (season reset)
@@ -21,6 +24,8 @@ CREATE TABLE IF NOT EXISTS players (
   last_seen        TIMESTAMP     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
   INDEX idx_identifier  (identifier),
+  INDEX idx_citizen_id  (citizen_id),
+  INDEX idx_username    (username),
   INDEX idx_rank        (rank),
   INDEX idx_license     (license_tier),
   INDEX idx_crew        (crew_id)
