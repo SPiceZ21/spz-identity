@@ -397,7 +397,7 @@ end
 
 ---@param source number
 ---@param state string
-local function SetPlayerState(source, state)
+function SetPlayerState(source, state)
     local profile = ProfileCache[source]
     if profile then
         profile.state = state
