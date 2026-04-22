@@ -6,13 +6,17 @@ local function OnPlayerConnected(source, deferrals)
     end
 
     local identifier = GetPlayerIdentifierByType(source, 'license')
+    print("^2[spz-identity] DEBUG: Processing connection for source " .. tostring(source) .. " (Identifier: " .. tostring(identifier) .. ")^7")
+    
     if not identifier then
         if deferrals then deferrals.done("Connection failed: Could not find license identifier.") end
         return
     end
 
     -- 1. Try to get profile by identifier
+    print("^2[spz-identity] DEBUG: Looking up profile...^7")
     local profile = exports["spz-identity"]:GetProfileByIdentifier(identifier)
+    print("^2[spz-identity] DEBUG: Profile lookup completed. Found: " .. tostring(profile ~= nil) .. "^7")
     
     -- 2. If no profile, create it
     if not profile then
