@@ -57,6 +57,7 @@ local function OnPlayerConnected(source, deferrals)
 
     -- 7. Signal that the player is ready (server-side modules)
     SetTimeout(100, function()
+        print("^2[spz-identity] DEBUG: Firing SPZ:playerReady for source " .. tostring(source) .. "^7")
         TriggerEvent("SPZ:playerReady", source, profile)
     end)
 
