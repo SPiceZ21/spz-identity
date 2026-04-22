@@ -22,6 +22,8 @@
         crew_tag       = string,    -- "[SPZ]" or nil
         credits        = number,
         banned         = bool,
+        avatar_url     = string,
+        banner_url     = string,
     }
 ]]
 
@@ -69,6 +71,8 @@ local function CreateProfile(source, identifier)
         crew_tag = nil,
         credits = 0,
         banned = false,
+        avatar_url = nil,
+        banner_url = nil,
         state = 'IDLE'
     }
 
@@ -121,6 +125,8 @@ local function GetProfile(source)
         crew_tag = row.crew_tag and ("[%s]"):format(row.crew_tag) or nil,
         credits = row.credits,
         banned = row.banned == 1,
+        avatar_url = row.avatar_url,
+        banner_url = row.banner_url,
         state = 'IDLE'
     }
 
@@ -162,7 +168,9 @@ local function GetProfileByIdentifier(identifier)
         crew_id = row.crew_id,
         crew_tag = row.crew_tag,
         credits = row.credits,
-        banned = row.banned == 1
+        banned = row.banned == 1,
+        avatar_url = row.avatar_url,
+        banner_url = row.banner_url
     }
 end
 
@@ -179,7 +187,9 @@ local WhitelistedProfileKeys = {
     ['sr'] = true,
     ['i_rating'] = true,
     ['credits'] = true,
-    ['crew_id'] = true
+    ['crew_id'] = true,
+    ['avatar_url'] = true,
+    ['banner_url'] = true
 }
 
 ---@param source number
@@ -253,7 +263,9 @@ local function SaveProfile(source)
             top3_count = ?,
             crew_id = ?,
             credits = ?,
-            banned = ?
+            banned = ?,
+            avatar_url = ?,
+            banner_url = ?
         WHERE id = ?
     ]], {
         profile.username,
@@ -271,6 +283,8 @@ local function SaveProfile(source)
         profile.crew_id,
         profile.credits,
         profile.banned and 1 or 0,
+        profile.avatar_url,
+        profile.banner_url,
         profile.id
     })
 
@@ -385,6 +399,8 @@ local function GetSyncSubset(profile)
         alltime_points = profile.alltime_points,
         sr             = profile.sr,
         i_rating       = profile.i_rating,
+        avatar_url     = profile.avatar_url,
+        banner_url     = profile.banner_url,
     }
 end
 
