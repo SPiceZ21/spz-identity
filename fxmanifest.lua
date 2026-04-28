@@ -3,7 +3,7 @@ game 'gta5'
 
 name 'spz-identity'
 description 'SPiceZ-Core — Player profiles, licenses, crews'
-version '1.0.0'
+version '1.3.4'
 author 'SPiceZ-Core'
 
 shared_scripts {
