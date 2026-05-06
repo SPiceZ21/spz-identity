@@ -38,15 +38,11 @@ dependencies {
 }
 
 exports {
-  'GetProfile',
   'UpdateProfile',
-  'GetPlayerState',
-  'SetPlayerState',
   'HasLicense',
   'GetLicenseTier',
   'UnlockLicense',
   'GetCitizenId',
   'GetByCitizenId',
   'GetUsername',
-  'IsFirstTime',
 }

@@ -15,13 +15,13 @@ local function OnPlayerConnected(source, deferrals)
 
     -- 1. Try to get profile by identifier
     print("^2[spz-identity] DEBUG: Looking up profile...^7")
-    local profile = exports["spz-identity"]:GetProfileByIdentifier(identifier)
+    local profile = GetProfileByIdentifier(identifier)
     print("^2[spz-identity] DEBUG: Profile lookup completed. Found: " .. tostring(profile ~= nil) .. "^7")
     
     -- 2. If no profile, create it
     if not profile then
         if deferrals then deferrals.update("Creating new driver profile...") end
-        profile = exports["spz-identity"]:CreateProfile(source, identifier)
+        profile = CreateProfile(source, identifier)
     end
 
     if not profile then
@@ -38,7 +38,7 @@ local function OnPlayerConnected(source, deferrals)
     -- 4. Check for first time setup
     if profile.first_time == 1 then
         if deferrals then deferrals.done() end
-        exports["spz-identity"]:GetProfile(source)
+        GetProfile(source)
         SetTimeout(100, function()
             local suggested = exports["spz-identity"]:GetPlatformName(source)
             TriggerClientEvent("SPZ:openCharacterCreation", source, { suggested = suggested })
@@ -50,10 +50,10 @@ local function OnPlayerConnected(source, deferrals)
     profile.joinedAt = os.time()
     
     -- Ensure it's in the cache for the current source ID
-    exports["spz-identity"]:GetProfile(source) 
+    GetProfile(source) 
 
     -- Send initial sync
-    local syncData = exports["spz-identity"]:GetSyncSubset(profile)
+    local syncData = GetSyncSubset(profile)
     TriggerClientEvent("SPZ:syncProfile", source, syncData)
 
     -- 6. Finalize connection
