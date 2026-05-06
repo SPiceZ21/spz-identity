@@ -32,7 +32,7 @@ local ProfileCache = {}
 ---@param source number
 ---@param identifier string
 ---@return table|nil
-local function CreateProfile(source, identifier)
+function CreateProfile(source, identifier)
     local citizen_id = SPZ.GenerateCitizenId()
 
     local insertId = MySQL.insert.await([[
@@ -77,12 +77,26 @@ local function CreateProfile(source, identifier)
     }
 
     ProfileCache[source] = profile
+
+    -- Push initial statebags
+    Player(source).state:set("profile", profile, true)
+    Player(source).state:set("citizenId", profile.citizen_id, true)
+    Player(source).state:set("username", profile.username, true)
+    Player(source).state:set("gender", profile.gender, true)
+    Player(source).state:set("licenseTier", profile.license_tier, true)
+    Player(source).state:set("rank", profile.rank, true)
+    Player(source).state:set("sr", profile.sr, true)
+    Player(source).state:set("iRating", profile.i_rating, true)
+    Player(source).state:set("crewId", profile.crew_id, true)
+    Player(source).state:set("firstTime", profile.first_time == 1, true)
+    Player(source).state:set("identityReady", true, true)
+
     return profile
 end
 
 ---@param source number
 ---@return table|nil
-local function GetProfile(source)
+function GetProfile(source)
     if ProfileCache[source] then
         return ProfileCache[source]
     end
@@ -131,12 +145,26 @@ local function GetProfile(source)
     }
 
     ProfileCache[source] = profile
+
+    -- Push initial statebags
+    Player(source).state:set("profile", profile, true)
+    Player(source).state:set("citizenId", profile.citizen_id, true)
+    Player(source).state:set("username", profile.username, true)
+    Player(source).state:set("gender", profile.gender, true)
+    Player(source).state:set("licenseTier", profile.license_tier, true)
+    Player(source).state:set("rank", profile.rank, true)
+    Player(source).state:set("sr", profile.sr, true)
+    Player(source).state:set("iRating", profile.i_rating, true)
+    Player(source).state:set("crewId", profile.crew_id, true)
+    Player(source).state:set("firstTime", profile.first_time == 1, true)
+    Player(source).state:set("identityReady", true, true)
+
     return profile
 end
 
 ---@param identifier string
 ---@return table|nil
-local function GetProfileByIdentifier(identifier)
+function GetProfileByIdentifier(identifier)
     local row = MySQL.single.await([[
         SELECT p.*, c.tag as crew_tag
         FROM players p
@@ -222,13 +250,25 @@ local function UpdateProfile(source, changes)
             -- Special case: Derived names for client sync
             if key == "rank" then
                 changedSubset.rank_name = exports["spz-identity"]:GetRankName(value)
+                Player(source).state:set("rank", value, true)
             end
 
             if key == "license_tier" then
                 changedSubset.license_name = SPZ.LicenseNames[value] or "Unknown"
+                Player(source).state:set("licenseTier", value, true)
             end
+
+            if key == "username" then Player(source).state:set("username", value, true) end
+            if key == "gender" then Player(source).state:set("gender", value, true) end
+            if key == "sr" then Player(source).state:set("sr", value, true) end
+            if key == "i_rating" then Player(source).state:set("iRating", value, true) end
+            if key == "crew_id" then Player(source).state:set("crewId", value, true) end
+            if key == "first_time" then Player(source).state:set("firstTime", value == 1, true) end
         end
     end
+
+    -- Update full profile statebag
+    Player(source).state:set("profile", profile, true)
 
     if next(changedSubset) then
         profile._dirty = true
@@ -384,7 +424,7 @@ end)
 
 ---@param profile table
 ---@return table
-local function GetSyncSubset(profile)
+function GetSyncSubset(profile)
     return {
         citizen_id     = profile.citizen_id,
         username       = profile.username,
@@ -428,13 +468,8 @@ local function IsFirstTime(source)
 end
 
 exports("CreateProfile", CreateProfile)
-exports("GetProfile", GetProfile)
-exports("GetProfileByIdentifier", GetProfileByIdentifier)
 exports("UpdateProfile", UpdateProfile)
 exports("SaveProfile", SaveProfile)
 exports("BanPlayer", BanPlayer)
 exports("GetPlaytime", GetPlaytime)
 exports("GetSyncSubset", GetSyncSubset)
-exports("GetPlayerState", GetPlayerState)
-exports("SetPlayerState", SetPlayerState)
-exports("IsFirstTime", IsFirstTime)
