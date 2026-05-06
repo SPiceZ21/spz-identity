@@ -41,6 +41,8 @@ function SyncProfileToStateBag(source, profile)
     Player(source).state:set("sr", profile.sr, true)
     Player(source).state:set("iRating", profile.i_rating, true)
     Player(source).state:set("crewId", profile.crew_id, true)
+    Player(source).state:set("crewTag", profile.crew_tag, true)
+    Player(source).state:set("avatarUrl", profile.avatar_url, true)
     Player(source).state:set("firstTime", profile.first_time == 1, true)
     Player(source).state:set("identityReady", true, true)
 end
