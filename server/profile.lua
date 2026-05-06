@@ -444,29 +444,6 @@ function GetSyncSubset(profile)
     }
 end
 
----@param source number
----@return string
-local function GetPlayerState(source)
-    local profile = ProfileCache[source]
-    return profile and profile.state or "IDLE"
-end
-
----@param source number
----@param state string
-function SetPlayerState(source, state)
-    local profile = ProfileCache[source]
-    if profile then
-        profile.state = state
-    end
-end
-
----@param source number
----@return boolean
-local function IsFirstTime(source)
-    local profile = ProfileCache[source]
-    return profile and profile.first_time == 1 or false
-end
-
 exports("CreateProfile", CreateProfile)
 exports("UpdateProfile", UpdateProfile)
 exports("SaveProfile", SaveProfile)
