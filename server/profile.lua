@@ -29,6 +29,22 @@
 
 local ProfileCache = {}
 
+function SyncProfileToStateBag(source, profile)
+    if not source or not profile then return end
+    
+    Player(source).state:set("profile", profile, true)
+    Player(source).state:set("citizenId", profile.citizen_id, true)
+    Player(source).state:set("username", profile.username, true)
+    Player(source).state:set("gender", profile.gender, true)
+    Player(source).state:set("licenseTier", profile.license_tier, true)
+    Player(source).state:set("rank", profile.rank, true)
+    Player(source).state:set("sr", profile.sr, true)
+    Player(source).state:set("iRating", profile.i_rating, true)
+    Player(source).state:set("crewId", profile.crew_id, true)
+    Player(source).state:set("firstTime", profile.first_time == 1, true)
+    Player(source).state:set("identityReady", true, true)
+end
+
 ---@param source number
 ---@param identifier string
 ---@return table|nil
@@ -77,19 +93,7 @@ function CreateProfile(source, identifier)
     }
 
     ProfileCache[source] = profile
-
-    -- Push initial statebags
-    Player(source).state:set("profile", profile, true)
-    Player(source).state:set("citizenId", profile.citizen_id, true)
-    Player(source).state:set("username", profile.username, true)
-    Player(source).state:set("gender", profile.gender, true)
-    Player(source).state:set("licenseTier", profile.license_tier, true)
-    Player(source).state:set("rank", profile.rank, true)
-    Player(source).state:set("sr", profile.sr, true)
-    Player(source).state:set("iRating", profile.i_rating, true)
-    Player(source).state:set("crewId", profile.crew_id, true)
-    Player(source).state:set("firstTime", profile.first_time == 1, true)
-    Player(source).state:set("identityReady", true, true)
+    SyncProfileToStateBag(source, profile)
 
     return profile
 end
@@ -98,6 +102,9 @@ end
 ---@return table|nil
 function GetProfile(source)
     if ProfileCache[source] then
+        -- Always ensure statebag is synced when GetProfile is called, 
+        -- in case the resource restarted but the session persists.
+        SyncProfileToStateBag(source, ProfileCache[source])
         return ProfileCache[source]
     end
 
@@ -146,18 +153,8 @@ function GetProfile(source)
 
     ProfileCache[source] = profile
 
-    -- Push initial statebags
-    Player(source).state:set("profile", profile, true)
-    Player(source).state:set("citizenId", profile.citizen_id, true)
-    Player(source).state:set("username", profile.username, true)
-    Player(source).state:set("gender", profile.gender, true)
-    Player(source).state:set("licenseTier", profile.license_tier, true)
-    Player(source).state:set("rank", profile.rank, true)
-    Player(source).state:set("sr", profile.sr, true)
-    Player(source).state:set("iRating", profile.i_rating, true)
-    Player(source).state:set("crewId", profile.crew_id, true)
-    Player(source).state:set("firstTime", profile.first_time == 1, true)
-    Player(source).state:set("identityReady", true, true)
+    -- Sync statebags
+    SyncProfileToStateBag(source, profile)
 
     return profile
 end
