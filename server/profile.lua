@@ -503,6 +503,7 @@ function GetSyncSubset(profile)
 end
 
 exports("CreateProfile", CreateProfile)
+exports("GetProfile", GetProfile)
 exports("UpdateProfile", UpdateProfile)
 exports("SaveProfile", SaveProfile)
 exports("BanPlayer", BanPlayer)
