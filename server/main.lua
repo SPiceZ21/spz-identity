@@ -3,7 +3,7 @@
 -- Handle character creation form from the NUI (spz-menu)
 RegisterNetEvent("SPZ:characterCreated", function(gender, username)
     local source = source
-    local profile = exports['spz-identity']:GetProfile(source)
+    local profile = GetProfile(source)
 
     if not profile then
         TriggerClientEvent("SPZ:characterCreateCompleted", source, false, "Could not locate your active profile. Please reconnect.")
