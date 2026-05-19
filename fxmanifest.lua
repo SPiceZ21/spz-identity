@@ -12,13 +12,6 @@ shared_scripts {
   'shared/events.lua',
 }
 
-ui_page 'ui/index.html'
-
-files {
-  'ui/index.html',
-  'ui/style.css',
-  'ui/script.js',
-}
 
 server_scripts {
   '@oxmysql/lib/MySQL.lua',
