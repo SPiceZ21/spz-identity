@@ -25,13 +25,21 @@ local function OnPlayerConnected(source, deferrals)
     end
 
     if not profile then
-        deferrals.done("Connection failed: Could not create/load driver profile.")
+        if deferrals then 
+            deferrals.done("Connection failed: Could not create/load driver profile.")
+        else
+            DropPlayer(source, "Connection failed: Could not create/load driver profile.")
+        end
         return
     end
 
     -- 3. Check for ban
     if profile.banned then
-        if deferrals then deferrals.done("You are banned from this server. Reason: " .. (profile.ban_reason or "No reason provided.")) end
+        if deferrals then 
+            deferrals.done("You are banned from this server. Reason: " .. (profile.ban_reason or "No reason provided.")) 
+        else
+            DropPlayer(source, "You are banned from this server. Reason: " .. (profile.ban_reason or "No reason provided."))
+        end
         return
     end
 
