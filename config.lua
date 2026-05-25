@@ -30,3 +30,6 @@ Config.SaveInterval = 60
 -- Crew tag constraints
 Config.CrewTagMinLength = 2
 Config.CrewTagMaxLength = 4
+
+-- Cooldown between crew join/leave actions (seconds). Set 0 to disable.
+Config.CrewCooldownSeconds = 3600

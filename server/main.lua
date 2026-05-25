@@ -16,7 +16,8 @@ Citizen.CreateThread(function()
         { name = "sr_day_marker",    type = "INT DEFAULT 0" },
         { name = "login_streak",     type = "INT DEFAULT 0" },
         { name = "last_login_date",  type = "VARCHAR(16) DEFAULT NULL" },
-        { name = "same_track_count", type = "INT DEFAULT 0" },
+        { name = "same_track_count",  type = "INT DEFAULT 0" },
+        { name = "last_crew_change",  type = "INT DEFAULT 0" },
     }
 
     for _, col in ipairs(columns) do
