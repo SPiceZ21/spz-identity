@@ -40,11 +40,21 @@ dependencies {
 }
 
 exports {
+  'GetProfile',
   'UpdateProfile',
+  'CreateProfile',
+  'GetSyncSubset',
   'HasLicense',
   'GetLicenseTier',
   'UnlockLicense',
   'GetCitizenId',
   'GetByCitizenId',
   'GetUsername',
+  'GetCrew',
+  'GetOnlineCrewMembers',
+  'CreateCrew',
+  'JoinCrew',
+  'LeaveCrew',
+  'GetCrewTag',
+  'GetCrewCooldownSeconds',
 }
