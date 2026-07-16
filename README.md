@@ -45,7 +45,7 @@
 | `IsFirstTime`     | Check if this is the player's first connection     |
 
 ## Dependencies
-- spz-lib
+- ox_lib
 - spz-core
 - oxmysql
 
