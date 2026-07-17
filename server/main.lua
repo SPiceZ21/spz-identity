@@ -1,33 +1,7 @@
 -- server/main.lua
 
--- ── Database Migrations ──────────────────────────────────────────────────────
-Citizen.CreateThread(function()
-    print("^3[spz-identity] Checking database schema...^7")
-    local columns = {
-        { name = "level",            type = "INT DEFAULT 1" },
-        { name = "top3_in_class_c",  type = "INT DEFAULT 0" },
-        { name = "top3_in_class_b",  type = "INT DEFAULT 0" },
-        { name = "top3_in_class_a",  type = "INT DEFAULT 0" },
-        { name = "top3_in_class_s",  type = "INT DEFAULT 0" },
-        { name = "last_race_at",     type = "INT DEFAULT 0" },
-        { name = "last_race_track",  type = "VARCHAR(64) DEFAULT NULL" },
-        { name = "sr_daily_gain",    type = "FLOAT DEFAULT 0" },
-        { name = "sr_daily_loss",    type = "FLOAT DEFAULT 0" },
-        { name = "sr_day_marker",    type = "INT DEFAULT 0" },
-        { name = "login_streak",     type = "INT DEFAULT 0" },
-        { name = "last_login_date",  type = "VARCHAR(16) DEFAULT NULL" },
-        { name = "same_track_count",  type = "INT DEFAULT 0" },
-        { name = "last_crew_change",  type = "INT DEFAULT 0" },
-    }
-
-    for _, col in ipairs(columns) do
-        MySQL.query.await(string.format([[
-            ALTER TABLE players ADD COLUMN IF NOT EXISTS %s %s
-        ]], col.name, col.type))
-    end
-    print("^2[spz-identity] Database schema up to date.^7")
-end)
-
+-- Schema (the players columns this resource reads) is owned by
+-- spz-core/migrations/ — see 004_identity_columns.sql.
 
 -- Handle character creation form from the NUI (spz-menu)
 RegisterNetEvent("SPZ:characterCreated", function(gender, username)
