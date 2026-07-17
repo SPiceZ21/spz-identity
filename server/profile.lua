@@ -43,6 +43,8 @@ function SyncProfileToStateBag(source, profile)
     Player(source).state:set("crewId", profile.crew_id, true)
     Player(source).state:set("crewTag", profile.crew_tag, true)
     Player(source).state:set("avatarUrl", profile.avatar_url, true)
+    Player(source).state:set("nation", profile.nation, true)
+    Player(source).state:set("raceNumber", profile.race_number, true)
     Player(source).state:set("firstTime", profile.first_time == 1, true)
     Player(source).state:set("identityReady", true, true)
 end
@@ -499,6 +501,8 @@ function GetSyncSubset(profile)
         i_rating       = profile.i_rating,
         avatar_url     = profile.avatar_url,
         banner_url     = profile.banner_url,
+        nation         = profile.nation,
+        race_number    = profile.race_number,
     }
 end
 
