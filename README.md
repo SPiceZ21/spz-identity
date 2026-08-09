@@ -1,53 +1,89 @@
-<div align="center">
-
-<img src="https://github.com/SPiceZ21/spz-core-media-kit/raw/main/Banner/Banner%232.png" alt="SPiceZ-Core Banner" width="100%"/>
-
-<br/>
-
 # spz-identity
-> Player profiles, licenses, crews · `v1.3.4`
 
-## Scripts
+> Player profiles, citizen IDs, licenses, ranks, crews · `v1.5.0`
 
-| Side   | File                       | Purpose                                          |
-| ------ | -------------------------- | ------------------------------------------------ |
-| Shared | `shared/licenses.lua`      | License tier definitions and constants           |
-| Shared | `ranks.lua`                | Rank definitions and thresholds                  |
-| Shared | `events.lua`               | Shared event name constants                      |
-| Server | `@oxmysql`                 | oxmysql database library import                  |
-| Server | `config.lua`               | Identity configuration                           |
-| Server | `server/main.lua`          | Entry point, event and export registration       |
-| Server | `connect.lua`              | Player connect handler and initial data load     |
-| Server | `citizen_id.lua`           | Citizen ID generation and lookup                 |
-| Server | `username.lua`             | Username assignment and validation               |
-| Server | `profile.lua`              | Player profile read/write                        |
-| Server | `licenses.lua`             | License state persistence and updates            |
-| Server | `ranks.lua`                | Rank calculation and promotion                   |
-| Server | `ratings.lua`              | Player rating (iRating/SR) persistence           |
-| Server | `crews.lua`                | Crew membership management                       |
-| Client | `client/main.lua`          | Client-side identity initialization              |
-| Client | `client/sync.lua`          | State sync to server                             |
+## Overview
+
+`spz-identity` is the player data layer. It resolves a connecting player to a profile,
+runs first-time character creation, and owns usernames, citizen IDs, license tiers, rank
+values, ratings and crew membership. Other modules read player data through its exports
+rather than touching the `players` table.
+
+## Connection flow
+
+1. `spz-core` fires `SPZ:playerConnected`.
+2. Identity looks the player up by license. No profile → `CreateProfile` with
+   `first_time = 1`.
+3. Returning player → cache warmed, `SPZ:playerReady` fires.
+4. New player → `SPZ:openCharacterCreation` fires instead; `SPZ:playerReady` is withheld.
+5. Creation submits gender, username, nation flag and a race number (1–99, validated
+   unique server-side) → `first_time = 0`, then `SPZ:characterReady` and `SPZ:playerReady`.
+
+Nation flag and race number are shown on nametags and in the standings tower. Flags ship
+as local assets — no CDN.
+
+## Structure
+
+| Side | File | Purpose |
+|---|---|---|
+| Shared | `shared/licenses.lua` | License tier definitions |
+| Shared | `shared/ranks.lua` | Rank thresholds and names |
+| Shared | `shared/events.lua` | Event name constants |
+| Server | `config.lua` | Identity configuration |
+| Server | `server/main.lua` | Entry point, export registration |
+| Server | `server/connect.lua` | Connect handler and profile resolution |
+| Server | `server/citizen_id.lua` | Citizen ID generation and lookup |
+| Server | `server/username.lua` | Username validation and uniqueness |
+| Server | `server/profile.lua` | Profile read/write and caching |
+| Server | `server/licenses.lua` | License state and unlock history |
+| Server | `server/ranks.lua` | Rank calculation |
+| Server | `server/ratings.lua` | SR / iRating persistence |
+| Server | `server/crews.lua` | Crew creation and membership |
+| Client | `client/main.lua` | Client-side identity init |
+| Client | `client/sync.lua` | Profile subset sync |
+| Client | `client/character_creation.lua` | First-time creation NUI bridge |
+| UI | `ui/` | Character creation form (plain HTML/CSS/JS) |
 
 ## Exports
 
-| Export            | Description                                        |
-| ----------------- | -------------------------------------------------- |
-| `GetProfile`      | Retrieve a player's full profile                   |
-| `UpdateProfile`   | Update profile fields for a player                 |
-| `GetPlayerState`  | Get a player's current state object                |
-| `SetPlayerState`  | Set a player's state value                         |
-| `HasLicense`      | Check whether a player holds a specific license    |
-| `GetLicenseTier`  | Get the tier level of a player's license           |
-| `UnlockLicense`   | Grant a license to a player                        |
-| `GetCitizenId`    | Get a player's citizen ID                          |
-| `GetByCitizenId`  | Look up a player by citizen ID                     |
-| `GetUsername`     | Get a player's display username                    |
-| `IsFirstTime`     | Check if this is the player's first connection     |
+| Group | Exports |
+|---|---|
+| Profile | `GetProfile` · `CreateProfile` · `UpdateProfile` · `SaveProfile` · `GetClientProfile` · `GetSyncSubset` · `SetPlayerState` |
+| Identity | `GetCitizenId` · `GetByCitizenId` · `GetUsername` · `GetPlatformName` · `GetPlaytime` |
+| Licenses | `HasLicense` · `GetLicenseTier` · `UnlockLicense` · `GetLicenseHistory` |
+| Ranks | `GetRankName` |
+| Crews | `CreateCrew` · `JoinCrew` · `LeaveCrew` · `GetCrew` · `GetCrewTag` · `GetOnlineCrewMembers` · `GetCrewCooldownSeconds` |
+| Admin | `BanPlayer` |
+
+```lua
+local profile = exports['spz-identity']:GetProfile(source)
+```
+
+## Events
+
+| Event | Side | Meaning |
+|---|---|---|
+| `SPZ:openCharacterCreation` | Client | New player — open the creation form |
+| `SPZ:characterCreated` | Server | NUI submitted gender + username |
+| `SPZ:characterReady` | Server | Profile initialised |
+| `SPZ:playerReady` | Server | Player data is safe to read |
+
+## Schema
+
+Owned by `spz-core/migrations/`. Key `players` columns:
+
+| Column | Type | Default | Meaning |
+|---|---|---|---|
+| `id` | INT | auto | Primary key |
+| `username` | VARCHAR | NULL | Unique racer name |
+| `gender` | INT | NULL | 0 = male, 1 = female |
+| `first_time` | INT | 1 | Character creation pending |
+| `license_tier` | INT | 0 | 0 = C, 1 = B, 2 = A, 3 = S |
 
 ## Dependencies
-- ox_lib
-- spz-core
-- oxmysql
 
-## CI
-Built and released via `.github/workflows/release.yml` on push to `main`.
+`ox_lib` · `spz-core` · `oxmysql`
+
+---
+
+Part of [SPiceZ-Core](../README.md) · GPL-3.0
