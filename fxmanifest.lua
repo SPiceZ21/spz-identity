@@ -25,6 +25,7 @@ server_scripts {
   'server/ranks.lua',
   'server/ratings.lua',
   'server/crews.lua',
+  'server/discord.lua',
 }
 
 client_scripts {
@@ -57,4 +58,5 @@ exports {
   'LeaveCrew',
   'GetCrewTag',
   'GetCrewCooldownSeconds',
+  'FetchDiscordProfile',
 }
