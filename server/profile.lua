@@ -116,9 +116,16 @@ end
 ---@return table|nil
 function GetProfile(source)
     if ProfileCache[source] then
-        -- Always ensure statebag is synced when GetProfile is called, 
-        -- in case the resource restarted but the session persists.
-        SyncProfileToStateBag(source, ProfileCache[source])
+        -- Re-sync ONLY when the statebag is actually missing (e.g. this resource
+        -- restarted while the session persisted).
+        --
+        -- This used to sync on every call, which made a getter a writer: it
+        -- re-set `crewId`, waking every reactive statebag handler — and
+        -- spz-appearance's handler re-applies the outfit, whose callback calls
+        -- GetProfile again. Infinite loop, two DB queries per cycle.
+        if Player(source).state.identityReady ~= true then
+            SyncProfileToStateBag(source, ProfileCache[source])
+        end
         return ProfileCache[source]
     end
 
