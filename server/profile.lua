@@ -106,10 +106,28 @@ function CreateProfile(source, identifier)
         state = 'IDLE'
     }
 
-    ProfileCache[source] = profile
-    SyncProfileToStateBag(source, profile)
+    -- source is nil when this is called from inside a connection deferral: the
+    -- DB row has to exist before we let the player in, but there is no Player
+    -- object yet to cache against or write statebags on. connect.lua binds it
+    -- to a source later, once the client announces itself.
+    if source then
+        ProfileCache[source] = profile
+        SyncProfileToStateBag(source, profile)
+    end
 
     return profile
+end
+
+--- Bind an already-loaded profile to a live source.
+---
+--- Used by the connect handshake: the profile is loaded during the deferral,
+--- when no source exists yet, and adopted here once the player is in the
+--- session and their client has announced itself.
+---@param source number
+---@param profile table
+function SetProfileForSource(source, profile)
+    if not source or not profile then return end
+    ProfileCache[source] = profile
 end
 
 ---@param source number
