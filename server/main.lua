@@ -38,10 +38,13 @@ RegisterNetEvent("SPZ:characterCreated", function(gender, username, nation, race
         return
     end
 
-    -- 2c. Race number: 1-99, unique across all racers (F1 rules)
+    -- 2c. Race number: 1-999, unique across all racers.
+    --
+    -- Was 1-99 (F1 rules), which gives the whole server 99 identities and runs
+    -- out. Three digits is the widest a number reads cleanly at on a livery.
     raceNumber = tonumber(raceNumber)
-    if not raceNumber or raceNumber < 1 or raceNumber > 99 or raceNumber % 1 ~= 0 then
-        TriggerClientEvent("SPZ:characterCreateCompleted", source, false, "Race number must be 1-99.")
+    if not raceNumber or raceNumber < 1 or raceNumber > 999 or raceNumber % 1 ~= 0 then
+        TriggerClientEvent("SPZ:characterCreateCompleted", source, false, "Race number must be 1-999.")
         return
     end
     local taken = MySQL.scalar.await(
@@ -75,16 +78,29 @@ RegisterNetEvent("SPZ:characterCreated", function(gender, username, nation, race
         profile.id
     })
 
-    -- 5. Send initial profile sync block 
+    -- 5. Republish the profile.
+    --
+    -- The statebags still say first_time = true at this point, and everything
+    -- downstream gates on that: the client's own play-menu request checks
+    -- LocalPlayer.state.firstTime and would refuse forever, leaving a player who
+    -- had just finished creating a character with no way into the world. The
+    -- memory and DB writes above are not visible until this runs.
+    SyncProfileToStateBag(source, profile)
+
     local syncData = exports["spz-identity"]:GetSyncSubset(profile)
     TriggerClientEvent("SPZ:syncProfile", source, syncData)
 
     -- 6. Tell the interface we succeed
     TriggerClientEvent("SPZ:characterCreateCompleted", source, true, "Welcome to SPiceZ Racing!")
 
-    -- 7. Advise spz-core to deploy the player to Freeroam properly
+    -- 7. Announce the completed identity.
+    --
+    -- This is the FIRST playerReady a new player gets: the connect handshake
+    -- deliberately withholds it for first-timers, because until now this profile
+    -- had no username and every consumer of the event would have been handed a
+    -- half-built one. The client asks for its route on its own once the
+    -- appearance editor closes, so nothing is pushed at it here.
     SetTimeout(100, function()
-        -- Wait for SPZ:characterReady to fire after character creation completes
         TriggerEvent("SPZ:characterReady", source)
         TriggerEvent("SPZ:playerReady", source, profile)
     end)
