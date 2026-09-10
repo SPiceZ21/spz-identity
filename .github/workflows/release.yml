@@ -1,0 +1,229 @@
+name: Release
+
+# One workflow for every spz- resource: work out the version, build the UI if
+# there is one, package, and publish a single GitHub release for it.
+#
+# THE VERSION IS AUTOMATIC. It comes from your commit messages since the last
+# release, the conventional-commit way:
+#
+#   feat: ...                     -> minor   1.4.2 -> 1.5.0
+#   fix: / chore: / anything else -> patch   1.4.2 -> 1.4.3
+#   feat!: ...  or a body line
+#   "BREAKING CHANGE: ..."        -> major   1.4.2 -> 2.0.0
+#
+# If you set `version` in fxmanifest.lua by hand in the push, that number wins
+# and nothing is bumped. Either way the result is written back to
+# fxmanifest.lua on main, because that file is what spz-update compares
+# against — a version that only lived in a tag would be invisible to it.
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# One release run at a time per repo. Each run deletes the previous release
+# before publishing its own, and pushes a version commit — two runs overlapping
+# could delete each other's release or push conflicting versions.
+concurrency:
+  group: release-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    # The version commit this workflow pushes must not start another run.
+    # Pushes made with GITHUB_TOKEN never trigger workflows anyway; this also
+    # covers a "[skip ci]" pushed by hand.
+    if: ${{ !contains(github.event.head_commit.message, '[skip ci]') }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # ── Version ────────────────────────────────────────────────────────────
+      - name: Work out the version
+        id: ver
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          read_ver() {
+            grep -Eo "^version[[:space:]]+['\"][0-9]+\.[0-9]+\.[0-9]+['\"]" |
+              grep -Eo "[0-9]+\.[0-9]+\.[0-9]+" | head -1 || true
+          }
+
+          CUR=$(read_ver < fxmanifest.lua)
+          if [ -z "$CUR" ]; then
+            echo "::error::fxmanifest.lua has no  version 'x.y.z'  line to work from."
+            exit 1
+          fi
+
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || true)
+
+          if [ -z "$LAST_TAG" ]; then
+            NEXT="$CUR"
+            WHY="first release -- taking fxmanifest.lua as it stands"
+          elif [ "$(git rev-list --count "$LAST_TAG"..HEAD)" = "0" ]; then
+            # A re-run with nothing new. Re-release the same number rather
+            # than inventing a patch for zero changes.
+            NEXT="$CUR"
+            WHY="no commits since $LAST_TAG"
+          else
+            PREV=$(git show "$LAST_TAG:fxmanifest.lua" 2>/dev/null | read_ver)
+
+            if [ -n "$PREV" ] && [ "$PREV" != "$CUR" ]; then
+              NEXT="$CUR"
+              WHY="set by hand in this push ($PREV -> $CUR)"
+            else
+              LOG=$(git log "$LAST_TAG"..HEAD --format='%s%n%b')
+              IFS=. read -r MA MI PA <<< "$CUR"
+
+              if grep -Eq 'BREAKING CHANGE|^[a-z]+(\([^)]*\))?!:' <<< "$LOG"; then
+                MA=$((MA + 1)); MI=0; PA=0; LEVEL=major
+              elif grep -Eq '^feat(\([^)]*\))?:' <<< "$LOG"; then
+                MI=$((MI + 1)); PA=0; LEVEL=minor
+              else
+                PA=$((PA + 1)); LEVEL=patch
+              fi
+
+              NEXT="$MA.$MI.$PA"
+              WHY="$LEVEL bump from the commits since $LAST_TAG"
+            fi
+          fi
+
+          echo "current=$CUR"      >> "$GITHUB_OUTPUT"
+          echo "next=$NEXT"        >> "$GITHUB_OUTPUT"
+          echo "last_tag=$LAST_TAG" >> "$GITHUB_OUTPUT"
+          echo "::notice::v$NEXT -- $WHY"
+
+      - name: Write the version back
+        if: ${{ steps.ver.outputs.next != steps.ver.outputs.current }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          sed -i -E "s/^(version[[:space:]]+)['\"][0-9]+\.[0-9]+\.[0-9]+['\"]/\1'${{ steps.ver.outputs.next }}'/" fxmanifest.lua
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "chore(release): v${{ steps.ver.outputs.next }} [skip ci]"
+          git push origin "HEAD:${{ github.ref_name }}"
+
+      # The release has to point at the commit that CARRIES the new version,
+      # not the one that triggered the run, or the tag and the file disagree.
+      - name: Release commit
+        id: sha
+        shell: bash
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      # ── Build ──────────────────────────────────────────────────────────────
+      - name: Setup Node
+        if: ${{ hashFiles('ui/package.json', 'html/package.json') != '' }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install & Build UI
+        shell: bash
+        run: |
+          if [ -d "ui" ] && [ -f "ui/package.json" ]; then
+            echo "Building UI in ui/ folder..."
+            cd ui
+            npm install --no-audit --no-fund
+            [ -d "node_modules/.bin" ] && chmod +x node_modules/.bin/* || true
+            npm run build
+            cd ..
+          elif [ -d "html" ] && [ -f "html/package.json" ]; then
+            echo "Building UI in html/ folder..."
+            cd html
+            npm install --no-audit --no-fund
+            [ -d "node_modules/.bin" ] && chmod +x node_modules/.bin/* || true
+            npm run build
+            cd ..
+          else
+            echo "No UI to build."
+          fi
+
+      - name: Package Resource
+        shell: bash
+        run: |
+          set -euo pipefail
+          RESOURCE_NAME=$(basename "$PWD")
+          PKG_DIR="release-pkg/$RESOURCE_NAME"
+          mkdir -p "$PKG_DIR"
+
+          # Everything EXCEPT dev-only files. The old version copied an
+          # allowlist (client, server, shared...), which silently dropped any
+          # folder it did not know about — stream/, migrations/, web/ — and a
+          # release zip missing one is broken in a way nothing reports.
+          EXCLUDES=(
+            --exclude=./.git       --exclude=./.github  --exclude=./release-pkg
+            --exclude=node_modules --exclude='*.zip'    --exclude=./tools
+            --exclude=./ui/src     --exclude=./html/src --exclude=./release_notes.md
+          )
+          tar "${EXCLUDES[@]}" -cf - . | tar -xf - -C "$PKG_DIR"
+
+          # A BUILT UI ships only its dist: the manifest streams nothing else,
+          # and ui/public in particular duplicates everything the build already
+          # copied into dist (spz-raceUI shipped every flag twice). Conditional,
+          # because a raw-HTML UI with no build keeps its files in ui/ itself,
+          # and pruning that down to a dist that does not exist would ship no UI.
+          for d in ui html; do
+            if [ -d "$PKG_DIR/$d/dist" ]; then
+              find "$PKG_DIR/$d" -mindepth 1 -maxdepth 1 ! -name dist -exec rm -rf {} +
+            fi
+          done
+
+          cd release-pkg
+          zip -rq "../${RESOURCE_NAME}.zip" "$RESOURCE_NAME"
+          echo "Packaged $(find "$RESOURCE_NAME" -type f | wc -l) files."
+
+      # ── Publish ────────────────────────────────────────────────────────────
+      - name: Generate Release Notes
+        id: notes
+        shell: bash
+        run: |
+          echo "tag=v${{ steps.ver.outputs.next }}" >> "$GITHUB_OUTPUT"
+          echo "## Release Notes" > release_notes.md
+          echo "Built from commit \`${{ steps.sha.outputs.sha }}\`" >> release_notes.md
+          echo "" >> release_notes.md
+
+          LAST_TAG="${{ steps.ver.outputs.last_tag }}"
+          if [ -z "$LAST_TAG" ]; then
+            git log --oneline --no-merges -n 20 >> release_notes.md
+          else
+            git log "${LAST_TAG}..HEAD" --oneline --no-merges >> release_notes.md
+          fi
+
+      # Runs AFTER the notes step on purpose. The notes are "commits since the
+      # previous release", worked out from that release's tag — which the
+      # checkout above fetched. Deleting it any earlier would leave nothing to
+      # diff against, and every release would fall back to the last 20 commits.
+      - name: Remove previous releases
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # --cleanup-tag removes the git tag along with the release, so the
+          # tag list stays as short as the release list.
+          gh release list --repo "${{ github.repository }}" --limit 100 \
+            --json tagName --jq '.[].tagName' |
+          while read -r tag; do
+            [ -z "$tag" ] && continue
+            echo "Removing previous release $tag"
+            gh release delete "$tag" --repo "${{ github.repository }}" --yes --cleanup-tag
+          done
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.notes.outputs.tag }}
+          target_commitish: ${{ steps.sha.outputs.sha }}
+          name: "Release ${{ steps.notes.outputs.tag }}"
+          body_path: release_notes.md
+          files: "*.zip"
+          make_latest: true
