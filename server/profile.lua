@@ -199,6 +199,8 @@ function GetProfile(source)
         banned = row.banned == 1,
         avatar_url = row.avatar_url,
         banner_url = row.banner_url,
+        nation = row.nation,
+        race_number = row.race_number,
         state = 'IDLE'
     }
 
@@ -246,7 +248,9 @@ function GetProfileByIdentifier(identifier)
         credits = row.credits,
         banned = row.banned == 1,
         avatar_url = row.avatar_url,
-        banner_url = row.banner_url
+        banner_url = row.banner_url,
+        nation = row.nation,
+        race_number = row.race_number
     }
 end
 
