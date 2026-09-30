@@ -21,6 +21,7 @@ server_scripts {
   'server/citizen_id.lua',
   'server/username.lua',
   'server/profile.lua',
+  'server/plates.lua',
   'server/licenses.lua',
   'server/ranks.lua',
   'server/ratings.lua',
@@ -59,4 +60,8 @@ exports {
   'GetCrewTag',
   'GetCrewCooldownSeconds',
   'FetchDiscordProfile',
+  'GetPlate',
+  'SetPlate',
+  'ClearPlate',
+  'NormalisePlate',
 }

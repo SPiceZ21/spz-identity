@@ -201,6 +201,7 @@ function GetProfile(source)
         banner_url = row.banner_url,
         nation = row.nation,
         race_number = row.race_number,
+        plate = row.plate,
         state = 'IDLE'
     }
 
@@ -250,7 +251,8 @@ function GetProfileByIdentifier(identifier)
         avatar_url = row.avatar_url,
         banner_url = row.banner_url,
         nation = row.nation,
-        race_number = row.race_number
+        race_number = row.race_number,
+        plate = row.plate
     }
 end
 
@@ -283,6 +285,13 @@ local WhitelistedProfileKeys = {
     ['login_streak'] = true,
     ['last_login_date'] = true,
     ['same_track_count'] = true
+    -- 'plate' is deliberately NOT here. It is the one player column with a
+    -- UNIQUE constraint, so it has a single writer (SetPlate in plates.lua)
+    -- that claims it atomically and updates the cache itself. Routing it
+    -- through UpdateProfile/SaveProfile instead would let a stale cached value
+    -- collide on save, and because SaveProfile writes every column in one
+    -- statement, that collision would fail the whole UPDATE -- silently losing
+    -- the player's XP, credits and rank along with it.
 }
 
 ---@param source number

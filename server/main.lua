@@ -4,7 +4,7 @@
 -- spz-core/migrations/ — see 004_identity_columns.sql.
 
 -- Handle character creation form from the NUI (spz-menu)
-RegisterNetEvent("SPZ:characterCreated", function(gender, username, nation, raceNumber)
+RegisterNetEvent("SPZ:characterCreated", function(gender, username, nation, raceNumber, plate)
     local source = source
     local profile = GetProfile(source)
 
@@ -57,6 +57,22 @@ RegisterNetEvent("SPZ:characterCreated", function(gender, username, nation, race
         return
     end
 
+    -- 2c. Plate: optional. Validated here so a bad one is reported on the
+    -- creation screen alongside the other fields, rather than silently dropped
+    -- and only noticed later when the first car spawns with a random plate.
+    local plateText = nil
+    if type(plate) == "string" and plate:gsub("%s", "") ~= "" then
+        local ok, normalised = pcall(function()
+            return exports["spz-identity"]:NormalisePlate(plate)
+        end)
+        if not ok or not normalised then
+            TriggerClientEvent("SPZ:characterCreateCompleted", source, false,
+                "That number plate is not allowed - up to 8 letters, numbers or spaces.")
+            return
+        end
+        plateText = normalised
+    end
+
     -- 3. Update memory state
     profile.username = username
     profile.gender = gender
@@ -77,6 +93,24 @@ RegisterNetEvent("SPZ:characterCreated", function(gender, username, nation, race
         profile.race_number,
         profile.id
     })
+
+    -- 4b. Claim the plate, if one was chosen. Deliberately AFTER the main
+    -- write and non-fatal: the character already exists at this point, so a
+    -- plate someone else grabbed in the meantime must not fail creation and
+    -- strand a player with no character. They are told, and can retry with
+    -- /plate.
+    if plateText then
+        local pOk, pRes = pcall(function()
+            return exports["spz-identity"]:SetPlate(source, plateText)
+        end)
+        if not pOk or pRes == false then
+            TriggerClientEvent("ox_lib:notify", source, {
+                title = "Plate",
+                description = ("'%s' was already taken - set another with /plate."):format(plateText),
+                type = "error",
+            })
+        end
+    end
 
     -- 5. Republish the profile.
     --
