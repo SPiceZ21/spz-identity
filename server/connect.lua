@@ -79,6 +79,26 @@ exports('PrepareProfile', PrepareProfile)
 ---
 --- @param source number
 --- @return table|nil profile
+--- Store the player's Discord ID on their row so the website can link
+--- accounts. Only present when Discord was running on their PC. The column is
+--- UNIQUE, so the ID is first freed from any other row. Runs in its own thread
+--- so the handshake never waits on it, and a missing column only logs.
+---@param source number
+---@param profile table
+function LinkDiscordId(source, profile)
+    local discord = GetPlayerIdentifierByType(source, 'discord')
+    if not discord then return end
+    discord = discord:sub(9)   -- strip "discord:"
+    local identifier = profile.identifier
+    CreateThread(function()
+        local ok, err = pcall(function()
+            MySQL.update.await('UPDATE players SET discord_id = NULL WHERE discord_id = ? AND identifier <> ?', { discord, identifier })
+            MySQL.update.await('UPDATE players SET discord_id = ? WHERE identifier = ?', { discord, identifier })
+        end)
+        if not ok then print(('^3[spz-identity] discord_id link failed: %s^7'):format(err)) end
+    end)
+end
+
 local function AttachProfile(source)
     if Player(source).state.identityReady then
         return GetProfile(source)
@@ -106,6 +126,7 @@ local function AttachProfile(source)
     -- identityReady, which is what marks the handshake as complete.
     SetProfileForSource(source, profile)
     SyncProfileToStateBag(source, profile)
+    LinkDiscordId(source, profile)
 
     TriggerClientEvent('SPZ:syncProfile', source, GetSyncSubset(profile))
 
