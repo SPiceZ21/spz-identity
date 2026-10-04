@@ -1,7 +1,7 @@
 -- server/main.lua
 
 -- Schema (the players columns this resource reads) is owned by
--- spz-core/migrations/ — see 004_identity_columns.sql.
+-- spz-core/migrations/players/004_identity_columns.sql.
 
 -- Handle character creation form from the NUI (spz-menu)
 RegisterNetEvent("SPZ:characterCreated", function(gender, username, nation, raceNumber, plate)
