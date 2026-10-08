@@ -111,4 +111,3 @@ RegisterCommand('refreshdiscord', function(source, args)
     if target > 0 then FetchDiscordProfile(target) end
 end, false)
 
-exports('FetchDiscordProfile', FetchDiscordProfile)

@@ -39,19 +39,10 @@ local function GetPlatformName(source)
     return name ~= "" and name or "racer"
 end
 
---- Get the current username mapped to the player connection
---- @param source integer
---- @return string|nil
-local function GetUsername(source)
-    local profile = exports['spz-identity']:GetProfile(source)
-    return profile and profile.username or nil
-end
-
 -- expose for internal server usage
 SPZ = SPZ or {}
 SPZ.IsUsernameTaken = IsUsernameTaken
 SPZ.ValidateUsername = ValidateUsername
 SPZ.GetPlatformName = GetPlatformName
 
-exports('GetUsername', GetUsername)
 exports('GetPlatformName', GetPlatformName)

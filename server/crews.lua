@@ -142,13 +142,6 @@ local function LeaveCrew(source)
     return true
 end
 
----@param source number
----@return string|nil
-local function GetCrewTag(source)
-    local profile = exports["spz-identity"]:GetProfile(source)
-    return profile and profile.crew_tag or nil
-end
-
 -- ── Exports ───────────────────────────────────────────────────────────────────
 
 local function GetCrewCooldownSeconds()
@@ -161,4 +154,3 @@ exports("GetOnlineCrewMembers", GetOnlineCrewMembers)
 exports("CreateCrew",           CreateCrew)
 exports("JoinCrew",             JoinCrew)
 exports("LeaveCrew",            LeaveCrew)
-exports("GetCrewTag",           GetCrewTag)

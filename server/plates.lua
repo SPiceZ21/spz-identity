@@ -113,7 +113,6 @@ local function ClearPlate(source)
     return true
 end
 
-exports("ClearPlate", ClearPlate)
 
 -- ── Command ─────────────────────────────────────────────────────────────────
 

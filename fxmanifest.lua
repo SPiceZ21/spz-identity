@@ -12,7 +12,6 @@ shared_scripts {
   'shared/events.lua',
 }
 
-
 server_scripts {
   '@oxmysql/lib/MySQL.lua',
   'config.lua',
@@ -24,7 +23,6 @@ server_scripts {
   'server/plates.lua',
   'server/licenses.lua',
   'server/ranks.lua',
-  'server/ratings.lua',
   'server/crews.lua',
   'server/discord.lua',
 }
@@ -41,27 +39,3 @@ dependencies {
   'oxmysql',
 }
 
-exports {
-  'GetProfile',
-  'UpdateProfile',
-  'CreateProfile',
-  'GetSyncSubset',
-  'HasLicense',
-  'GetLicenseTier',
-  'UnlockLicense',
-  'GetCitizenId',
-  'GetByCitizenId',
-  'GetUsername',
-  'GetCrew',
-  'GetOnlineCrewMembers',
-  'CreateCrew',
-  'JoinCrew',
-  'LeaveCrew',
-  'GetCrewTag',
-  'GetCrewCooldownSeconds',
-  'FetchDiscordProfile',
-  'GetPlate',
-  'SetPlate',
-  'ClearPlate',
-  'NormalisePlate',
-}

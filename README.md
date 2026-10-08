@@ -48,11 +48,11 @@ as local assets — no CDN.
 
 | Group | Exports |
 |---|---|
-| Profile | `GetProfile` · `CreateProfile` · `UpdateProfile` · `SaveProfile` · `GetClientProfile` · `GetSyncSubset` · `SetPlayerState` |
-| Identity | `GetCitizenId` · `GetByCitizenId` · `GetUsername` · `GetPlatformName` · `GetPlaytime` |
-| Licenses | `HasLicense` · `GetLicenseTier` · `UnlockLicense` · `GetLicenseHistory` |
+| Profile | `GetProfile` · `UpdateProfile` · `GetClientProfile` · `GetSyncSubset` |
+| Identity | `GetPlatformName` · `GetPlaytime` |
+| Licenses | `UnlockLicense` |
 | Ranks | `GetRankName` |
-| Crews | `CreateCrew` · `JoinCrew` · `LeaveCrew` · `GetCrew` · `GetCrewTag` · `GetOnlineCrewMembers` · `GetCrewCooldownSeconds` |
+| Crews | `CreateCrew` · `JoinCrew` · `LeaveCrew` · `GetCrew` · `GetOnlineCrewMembers` · `GetCrewCooldownSeconds` |
 | Admin | `BanPlayer` |
 
 ```lua

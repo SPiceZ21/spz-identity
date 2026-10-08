@@ -86,6 +86,12 @@ function CreateProfile(source, identifier)
         i_rating = Config.DefaultIRating or 1500,
         rank = 'C-5',
         license_tier = 0,
+        top3_count = 0,
+        level = 1,
+        rank_points = 0,
+        rank_streak = 0,
+        rp_day_gain = 0,
+        rp_day_key = nil,
         top3_in_class_c = 0,
         top3_in_class_b = 0,
         top3_in_class_a = 0,
@@ -182,6 +188,11 @@ function GetProfile(source)
         license_tier = row.license_tier,
         top3_count = row.top3_count,
         level = row.level,
+        rank_points = row.rank_points or 0,
+        rank_streak = row.rank_streak or 0,
+        rp_day_gain = row.rp_day_gain or 0,
+        rp_day_key = row.rp_day_key,
+        same_track_count = row.same_track_count or 0,
         top3_in_class_c = row.top3_in_class_c,
         top3_in_class_b = row.top3_in_class_b,
         top3_in_class_a = row.top3_in_class_a,
@@ -244,6 +255,23 @@ function GetProfileByIdentifier(identifier)
         rank = row.rank,
         license_tier = row.license_tier,
         top3_count = row.top3_count,
+        level = row.level,
+        rank_points = row.rank_points or 0,
+        rank_streak = row.rank_streak or 0,
+        rp_day_gain = row.rp_day_gain or 0,
+        rp_day_key = row.rp_day_key,
+        top3_in_class_c = row.top3_in_class_c,
+        top3_in_class_b = row.top3_in_class_b,
+        top3_in_class_a = row.top3_in_class_a,
+        top3_in_class_s = row.top3_in_class_s,
+        last_race_at = row.last_race_at,
+        last_race_track = row.last_race_track,
+        same_track_count = row.same_track_count or 0,
+        sr_daily_gain = row.sr_daily_gain,
+        sr_daily_loss = row.sr_daily_loss,
+        sr_day_marker = row.sr_day_marker,
+        login_streak = row.login_streak,
+        last_login_date = row.last_login_date,
         crew_id = row.crew_id,
         crew_tag = row.crew_tag,
         credits = row.credits,
@@ -284,7 +312,11 @@ local WhitelistedProfileKeys = {
     ['sr_day_marker'] = true,
     ['login_streak'] = true,
     ['last_login_date'] = true,
-    ['same_track_count'] = true
+    ['same_track_count'] = true,
+    ['rank_points'] = true,
+    ['rank_streak'] = true,
+    ['rp_day_gain'] = true,
+    ['rp_day_key'] = true,
     -- 'plate' is deliberately NOT here. It is the one player column with a
     -- UNIQUE constraint, so it has a single writer (SetPlate in plates.lua)
     -- that claims it atomically and updates the cache itself. Routing it
@@ -372,7 +404,7 @@ local function SaveProfile(source)
             alltime_points = ?,
             sr = ?,
             i_rating = ?,
-            rank = ?,
+            `rank` = ?,
             license_tier = ?,
             top3_count = ?,
             level = ?,
@@ -387,6 +419,11 @@ local function SaveProfile(source)
             sr_day_marker = ?,
             login_streak = ?,
             last_login_date = ?,
+            same_track_count = ?,
+            rank_points = ?,
+            rank_streak = ?,
+            rp_day_gain = ?,
+            rp_day_key = ?,
             crew_id = ?,
             credits = ?,
             banned = ?,
@@ -418,6 +455,11 @@ local function SaveProfile(source)
         profile.sr_day_marker,
         profile.login_streak,
         profile.last_login_date,
+        profile.same_track_count or 0,
+        profile.rank_points or 0,
+        profile.rank_streak or 0,
+        profile.rp_day_gain or 0,
+        profile.rp_day_key,
         profile.crew_id,
         profile.credits,
         profile.banned and 1 or 0,
@@ -428,32 +470,6 @@ local function SaveProfile(source)
 
     if success then
         profile._dirty = false
-        return true
-    end
-
-    return false
-end
-
----@param source number
----@param reason string
----@return boolean
-local function BanPlayer(source, reason)
-    local profile = GetProfile(source)
-    if not profile then
-        return false
-    end
-
-    profile.banned = true
-    profile.ban_reason = reason
-    profile._dirty = true
-
-    -- Immediate DB update for bans
-    local success = MySQL.update.await([[
-        UPDATE players SET banned = 1, ban_reason = ? WHERE id = ?
-    ]], { reason, profile.id })
-
-    if success then
-        DropPlayer(source, ("You have been banned: %s"):format(reason))
         return true
     end
 
@@ -514,10 +530,6 @@ AddEventHandler("SPZ:playerDisconnected", function(source)
     ProfileCache[source] = nil
 end)
 
-RegisterNetEvent("SPZ:identity:setPlayerState", function(state)
-    SetPlayerState(source, state)
-end)
-
 -- --- Exports ---
 
 ---@param profile table
@@ -544,10 +556,7 @@ function GetSyncSubset(profile)
     }
 end
 
-exports("CreateProfile", CreateProfile)
 exports("GetProfile", GetProfile)
 exports("UpdateProfile", UpdateProfile)
-exports("SaveProfile", SaveProfile)
-exports("BanPlayer", BanPlayer)
 exports("GetPlaytime", GetPlaytime)
 exports("GetSyncSubset", GetSyncSubset)

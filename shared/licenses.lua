@@ -16,8 +16,5 @@ SPZ.LicenseNames = {
     [3] = "Class S — Elite",
 }
 
-SPZ.LicenseRequirements = {
-    [1] = { points = 500,  top3 = 5,  min_sr = 1.0 },  -- to unlock B
-    [2] = { points = 1000, top3 = 8,  min_sr = 1.5 },  -- to unlock A
-    [3] = { points = 2000, top3 = 12, min_sr = 2.0 },  -- to unlock S
-}
+-- Promotion rules live in spz-progression/config.lua (Config.Rules). The class
+-- letter is derived from rank points; nothing gates cars or classes on it.
