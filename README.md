@@ -6,12 +6,12 @@
 
 ## Overview
 
-Creates and caches each player's profile on join and exposes it to every other module through exports and statebags. Also owns driver licences (class unlocks), the crew backend and personal number plates.
+Creates and caches each player's profile on join and exposes it to every other module through exports and statebags. Also owns driver licences (the C–S class letter), the crew backend and personal number plates.
 
 ## Features
 
 - Profile created on first join, cached for the session
-- Licence tiers that gate car classes
+- Licence class letter (C to S) derived from rank points
 - Crew create / join / leave backend (UI is spz-crew)
 - Personal vanity plates
 - Optional Discord linking
